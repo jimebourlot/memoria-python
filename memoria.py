@@ -86,7 +86,10 @@ anchura_boton = anchura_pantalla
 # La fuente que estará sobre el botón
 tamanio_fuente = 40
 fuente = pygame.font.SysFont("Montserrat", tamanio_fuente)
-xFuente = int(anchura_boton / 2)
+texto_boton_iniciar = fuente.render("INICIAR JUEGO", True, color_blanco)
+texto_boton_iniciar_rect = texto_boton_iniciar.get_rect()[2::]
+
+xFuente = int(anchura_boton / 2 - texto_boton_iniciar_rect[0] / 2)
 yFuente = int(altura_pantalla - altura_boton)
 
 # El botón, que al final es un rectángulo
@@ -298,11 +301,10 @@ while True:
         # Si está iniciado, entonces botón blanco con fuente gris para que parezca deshabilitado
         pygame.draw.rect(pantalla_juego, color_blanco, boton)
         pantalla_juego.blit(fuente.render(
-            "Iniciar juego", True, color_gris), (xFuente, yFuente))
+            "INICIAR JUEGO", True, color_gris), (xFuente, yFuente))
     else:
         pygame.draw.rect(pantalla_juego, color_azul, boton)
-        pantalla_juego.blit(fuente.render(
-            "Iniciar juego", True, color_blanco), (xFuente, yFuente))
+        pantalla_juego.blit(texto_boton_iniciar, (xFuente, yFuente))
 
     # Actualizamos la pantalla
     pygame.display.update()
