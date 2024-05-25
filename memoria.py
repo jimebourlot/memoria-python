@@ -1,26 +1,4 @@
-"""
 
-  ____          _____               _ _           _       
- |  _ \        |  __ \             (_) |         | |      
- | |_) |_   _  | |__) |_ _ _ __ _____| |__  _   _| |_ ___ 
- |  _ <| | | | |  ___/ _` | '__|_  / | '_ \| | | | __/ _ \
- | |_) | |_| | | |  | (_| | |   / /| | |_) | |_| | ||  __/
- |____/ \__, | |_|   \__,_|_|  /___|_|_.__/ \__, |\__\___|
-         __/ |                               __/ |        
-        |___/                               |___/         
-    
-____________________________________
-/ Si necesitas ayuda, contáctame en \
-\ https://parzibyte.me               /
- ------------------------------------
-        \   ^__^
-         \  (oo)\_______
-            (__)\       )\/\
-                ||----w |
-                ||     ||
-Creado por Parzibyte (https://parzibyte.me). Este encabezado debe mantenerse intacto,
-excepto si este es un proyecto de un estudiante.
-"""
 import pygame
 import sys
 import math
@@ -93,8 +71,16 @@ sonido_fracaso = pygame.mixer.Sound("assets/equivocado.wav")
 sonido_voltear = pygame.mixer.Sound("assets/voltear.wav")
 
 # Calculamos el tamaño de la pantalla en base al tamaño de los cuadrados
-anchura_pantalla = len(cuadros[0]) * medida_cuadro
-altura_pantalla = (len(cuadros) * medida_cuadro) + altura_boton
+
+# Obtener información sobre la pantalla
+info_pantalla = pygame.display.Info()
+
+# Usar el ancho de la pantalla actual
+anchura_pantalla = info_pantalla.current_w
+altura_pantalla = info_pantalla.current_h
+
+# anchura_pantalla = len(cuadros[0]) * medida_cuadro
+# altura_pantalla = (len(cuadros) * medida_cuadro) + altura_boton
 anchura_boton = anchura_pantalla
 
 # La fuente que estará sobre el botón
@@ -181,16 +167,20 @@ def iniciar_juego():
 Iniciamos la pantalla con las medidas previamente calculadas, colocamos título y
 reproducimos el sonido de fondo
 """
-pantalla_juego = pygame.display.set_mode((anchura_pantalla, altura_pantalla))
-pygame.display.set_caption('Memorama en Python - By Parzibyte')
+pantalla_juego = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
+pygame.display.set_caption('Memoria Calchines')
 pygame.mixer.Sound.play(sonido_fondo, -1)  # El -1 indica un loop infinito
 # Ciclo infinito...
 while True:
     # Escuchar eventos, pues estamos en un ciclo infinito que se repite varias veces por segundo
     for event in pygame.event.get():
+        
         # Si quitan el juego, salimos
         if event.type == pygame.QUIT:
             sys.exit()
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                sys.exit()
         # Si hicieron clic y el usuario puede jugar...
         elif event.type == pygame.MOUSEBUTTONDOWN and puede_jugar:
 
@@ -219,8 +209,8 @@ while True:
                 arreglo) lo cual es correcto. Por poner otro ejemplo, si el clic fue en la X 50, al dividir da 0.5 y
                 resulta en el índice 0
                 """
-                x = math.floor(xAbsoluto / medida_cuadro)
-                y = math.floor(yAbsoluto / medida_cuadro)
+                x = math.floor((xAbsoluto - margen_izquierdo) / medida_cuadro)
+                y = math.floor((yAbsoluto - margen_superior) / medida_cuadro)
                 # Primero lo primero. Si  ya está mostrada o descubierta, no hacemos nada
                 cuadro = cuadros[y][x]
                 if cuadro.mostrar or cuadro.descubierto:
@@ -276,19 +266,26 @@ while True:
         puede_jugar = True
 
     # Hacer toda la pantalla blanca
+    
     pantalla_juego.fill(color_blanco)
-    # Banderas para saber en dónde dibujar las imágenes, pues al final
-    # la pantalla de PyGame son solo un montón de pixeles
-    x = 0
-    y = 0
-    # Recorrer los cuadros
+
+    # Calcular el espacio restante en la pantalla
+    espacio_horizontal = anchura_pantalla - (len(cuadros[0]) * medida_cuadro)
+    espacio_vertical = altura_pantalla - (len(cuadros) * medida_cuadro)
+    # Calcular el margen izquierdo y superior para centrar los cuadros
+    margen_izquierdo = espacio_horizontal // 2
+    margen_superior = espacio_vertical // 2
+
+    # Hago un rectangulo que rodee el tablero
+
+    color_gris = (128, 128, 128)
+    pygame.draw.rect(pantalla_juego, color_gris, (margen_izquierdo -20, margen_superior - 20, len(cuadros[0]) * medida_cuadro + 20, len(cuadros) * medida_cuadro +20), 2)
+    
+    # Recorrer los cuadros y dibujar en las coordenadas ajustadas
+    y = margen_superior
     for fila in cuadros:
-        x = 0
+        x = margen_izquierdo
         for cuadro in fila:
-            """
-            Si está descubierto o se debe mostrar, dibujamos la imagen real. Si no,
-            dibujamos la imagen oculta
-            """
             if cuadro.descubierto or cuadro.mostrar:
                 pantalla_juego.blit(cuadro.imagen_real, (x, y))
             else:
