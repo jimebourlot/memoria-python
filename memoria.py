@@ -84,9 +84,9 @@ altura_pantalla = info_pantalla.current_h
 anchura_boton = anchura_pantalla
 
 # La fuente que estará sobre el botón
-tamanio_fuente = 20
-fuente = pygame.font.SysFont("Arial", tamanio_fuente)
-xFuente = int((anchura_boton / 2) - (tamanio_fuente / 2))
+tamanio_fuente = 40
+fuente = pygame.font.SysFont("Montserrat", tamanio_fuente)
+xFuente = int(anchura_boton / 2)
 yFuente = int(altura_pantalla - altura_boton)
 
 # El botón, que al final es un rectángulo
