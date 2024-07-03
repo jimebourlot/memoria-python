@@ -47,15 +47,16 @@ class Cuadro:
 Todo el juego; que al final es un arreglo de objetos
 """
 cuadros = [
-    [Cuadro("assets/coco.png"), Cuadro("assets/coco.png"),
-     Cuadro("assets/manzana.png"), Cuadro("assets/manzana.png")],
-    [Cuadro("assets/limón.png"), Cuadro("assets/limón.png"),
-     Cuadro("assets/naranja.png"), Cuadro("assets/naranja.png")],
-    [Cuadro("assets/pera.png"), Cuadro("assets/pera.png"),
-     Cuadro("assets/piña.png"), Cuadro("assets/piña.png")],
-    [Cuadro("assets/plátano.png"), Cuadro("assets/plátano.png"),
-     Cuadro("assets/sandía.png"), Cuadro("assets/sandía.png")],
+    [Cuadro(f"assets/image1.png"), Cuadro(f"assets/image1.png"),
+     Cuadro(f"assets/image2.png"), Cuadro(f"assets/image2.png")],
+    [Cuadro(f"assets/image3.png"), Cuadro(f"assets/image3.png"),
+     Cuadro(f"assets/image4.png"), Cuadro(f"assets/image4.png")],
+    [Cuadro(f"assets/image5.png"), Cuadro(f"assets/image5.png"),
+     Cuadro(f"assets/image6.png"), Cuadro(f"assets/image6.png")],
+    [Cuadro(f"assets/image7.png"), Cuadro(f"assets/image7.png"),
+     Cuadro(f"assets/image8.png"), Cuadro(f"assets/image8.png")],
 ]
+
 
 # Colores
 color_blanco = (255, 255, 255)
@@ -192,65 +193,75 @@ while True:
             clic. PyGame no ofrece detección de clic en imagen, por ejemplo. Así que
             se deben hacer ciertos trucos
             """
-            # Si el click fue sobre el botón y el juego no se ha iniciado, entonces iniciamos el juego
+            # Obtener las coordenadas absolutas del evento del ratón
             xAbsoluto, yAbsoluto = event.pos
+
+            # Verificar si el clic fue dentro del botón de inicio del juego
             if boton.collidepoint(event.pos):
                 if not juego_iniciado:
                     iniciar_juego()
-
             else:
                 # Si no hay juego iniciado, ignoramos el clic
                 if not juego_iniciado:
                     continue
-                """
-                Ahora necesitamos a X e Y como índices del arreglo. Los índices no
-                son lo mismo que los pixeles, pero sabemos que las imágenes están en un arreglo
-                y por lo tanto podemos dividir las coordenadas entre la medida de cada cuadro, redondeando
-                hacia abajo, para obtener el índice.
-                Por ejemplo, si la medida del cuadro es 100, y el clic es en 140 entonces sabemos que le dieron
-                a la segunda imagen porque 140 / 100 es 1.4 y redondeado hacia abajo es 1 (la segunda posición del
-                arreglo) lo cual es correcto. Por poner otro ejemplo, si el clic fue en la X 50, al dividir da 0.5 y
-                resulta en el índice 0
-                """
+
+                # Calcular los índices x e y en base a las coordenadas del clic
                 x = math.floor((xAbsoluto - margen_izquierdo) / medida_cuadro)
                 y = math.floor((yAbsoluto - margen_superior) / medida_cuadro)
-                # Primero lo primero. Si  ya está mostrada o descubierta, no hacemos nada
-                cuadro = cuadros[y][x]
-                if cuadro.mostrar or cuadro.descubierto:
-                    # continue ignora lo de abajo y deja que el ciclo siga
-                    continue
-                # Si es la primera vez que tocan la imagen (es decir, no están buscando el par de otra, sino apenas
-                # están descubriendo la primera)
-                if x1 is None and y1 is None:
-                    # Entonces la actual es en la que acaban de dar clic, la mostramos
-                    x1 = x
-                    y1 = y
-                    cuadros[y1][x1].mostrar = True
-                    pygame.mixer.Sound.play(sonido_voltear)
+
+                # Verificar si los índices están dentro de los límites de las cartas
+                if 0 <= x < len(cuadros[0]) and 0 <= y < len(cuadros):
+                    # Acceder al cuadro solo si los índices están dentro de los límites
+                    cuadro = cuadros[y][x]
+                    # Aquí puedes realizar las operaciones necesarias con el cuadro
                 else:
-                    # En caso de que ya hubiera una clickeada anteriormente y estemos buscando el par, comparamos...
-                    x2 = x
-                    y2 = y
-                    cuadros[y2][x2].mostrar = True
-                    cuadro1 = cuadros[y1][x1]
-                    cuadro2 = cuadros[y2][x2]
-                    # Si coinciden, entonces a ambas las ponemos en descubiertas:
-                    if cuadro1.fuente_imagen == cuadro2.fuente_imagen:
-                        cuadros[y1][x1].descubierto = True
-                        cuadros[y2][x2].descubierto = True
-                        x1 = None
-                        x2 = None
-                        y1 = None
-                        y2 = None
-                        pygame.mixer.Sound.play(sonido_clic)
+                    # Si los índices están fuera de los límites, ignorar el clic o realizar otra acción adecuada
+                    print("Clic fuera de los límites del área de las cartas")
+                # Verificar si las coordenadas de clic están dentro del área de las cartas
+                if 0 <= x < len(cuadros[0]) and 0 <= y < len(cuadros):
+                    cuadro = cuadros[y][x]
+                    if cuadro.mostrar or cuadro.descubierto:
+                        # Si el cuadro ya está mostrado o descubierto, ignorar el clic
+                        continue
+
+                    # Manejo de lógica para descubrir las cartas
+                    if x1 is None and y1 is None:
+                        # Si es la primera vez que se hace clic, guardar las coordenadas y mostrar el cuadro
+                        x1 = x
+                        y1 = y
+                        cuadros[y1][x1].mostrar = True
+                        pygame.mixer.Sound.play(sonido_voltear)
                     else:
-                        pygame.mixer.Sound.play(sonido_fracaso)
-                        # Si no coinciden, tenemos que ocultarlas en el plazo de [segundos_mostrar_pieza] segundo(s). Así que establecemos
-                        # la bandera. Como esto es un ciclo infinito y asíncrono, podemos usar el tiempo para saber
-                        # cuándo fue el tiempo en el que se empezó a ocultar
-                        ultimos_segundos = int(time.time())
-                        # Hasta que el tiempo se cumpla, el usuario no puede jugar
-                        puede_jugar = False
+                        # Si ya hay una carta descubierta y estamos buscando el par
+                        x2 = x
+                        y2 = y
+
+                        # Verificar si las segundas coordenadas también están dentro de los límites
+                        if 0 <= x2 < len(cuadros[0]) and 0 <= y2 < len(cuadros):
+                            cuadros[y2][x2].mostrar = True
+                            cuadro1 = cuadros[y1][x1]
+                            cuadro2 = cuadros[y2][x2]
+                            # Comparar las cartas descubiertas
+                            if cuadro1.fuente_imagen == cuadro2.fuente_imagen:
+                                cuadro1.descubierto = True
+                                cuadro2.descubierto = True
+                                x1 = None
+                                y1 = None
+                                x2 = None
+                                y2 = None
+                                pygame.mixer.Sound.play(sonido_clic)
+                            else:
+                                pygame.mixer.Sound.play(sonido_fracaso)
+                                # Lógica para ocultar las cartas después de un tiempo
+                                ultimos_segundos = int(time.time())
+                                puede_jugar = False  # Bloquear el juego temporalmente
+                        else:
+                            # Si las segundas coordenadas están fuera de los límites, ignorar el clic o manejar según sea necesario
+                            print("Clic fuera del área de las cartas")
+                else:
+                    # Si las coordenadas de clic están fuera del área de las cartas, ignorar el clic o manejar según sea necesario
+                    print("Clic fuera del área de las cartas")
+
                 comprobar_si_gana()
 
     ahora = int(time.time())
