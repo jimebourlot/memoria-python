@@ -56,13 +56,23 @@ cuadros = [
     [Cuadro(f"assets/image7.png"), Cuadro(f"assets/image7.png"),
      Cuadro(f"assets/image8.png"), Cuadro(f"assets/image8.png")],
 ]
+logo = pygame.image.load("assets/logo.png")  # Reemplaza con el nombre de tu archivo de imagen
+ruta_fuente = "assets/MrEavesXLModNarOT-Heavy.ttf" 
 
+# Obtener las dimensiones originales de la imagen
+ancho_original, alto_original = logo.get_size()
+
+# Redimensionar la imagen al 20% de su tamaño original
+nuevo_ancho = int(ancho_original * 0.03)
+nuevo_alto = int(alto_original * 0.03)
+logo = pygame.transform.scale(logo, (nuevo_ancho, nuevo_alto))
+ancho_logo, alto_logo = logo.get_size()
 
 # Colores
 color_blanco = (255, 255, 255)
 color_negro = (0, 0, 0)
-color_gris = (206, 206, 206)
-color_azul = (30, 136, 229)
+color_gris = (75,77,78)
+color_rosa = (214, 14, 65)
 
 # Los sonidos
 sonido_fondo = pygame.mixer.Sound("assets/fondo.wav")
@@ -80,22 +90,22 @@ info_pantalla = pygame.display.Info()
 anchura_pantalla = info_pantalla.current_w
 altura_pantalla = info_pantalla.current_h
 
-# anchura_pantalla = len(cuadros[0]) * medida_cuadro
-# altura_pantalla = (len(cuadros) * medida_cuadro) + altura_boton
-anchura_boton = anchura_pantalla
-
 # La fuente que estará sobre el botón
-tamanio_fuente = 40
-fuente = pygame.font.SysFont("Montserrat", tamanio_fuente)
-texto_boton_iniciar = fuente.render("INICIAR JUEGO", True, color_blanco)
-texto_boton_iniciar_rect = texto_boton_iniciar.get_rect()[2::]
+tamanio_fuente = 72
+fuente = pygame.font.Font(ruta_fuente, tamanio_fuente)
 
-xFuente = int(anchura_boton / 2 - texto_boton_iniciar_rect[0] / 2)
-yFuente = int(altura_pantalla - altura_boton)
+# Definir dimensiones y posición del botón
+anchura_boton = 450
+altura_boton = 100
+xFuente = int(anchura_pantalla / 2 - anchura_boton / 2)
+yFuente = int(altura_pantalla / 2 - altura_boton / 2)
 
-# El botón, que al final es un rectángulo
-boton = pygame.Rect(0, altura_pantalla - altura_boton,
-                    anchura_boton, altura_pantalla)
+# Renderizar texto en el botón
+texto_boton_iniciar = fuente.render("Iniciar Juego", True, color_blanco)
+texto_boton_iniciar_rect = texto_boton_iniciar.get_rect()
+texto_boton_iniciar_rect.center = (xFuente + anchura_boton / 2, yFuente + altura_boton / 2)
+boton = pygame.Rect(xFuente, yFuente, anchura_boton, altura_boton)
+
 
 # Banderas
 # Bandera para saber si se debe ocultar la tarjeta dentro de N segundos
@@ -137,10 +147,40 @@ def aleatorizar_cuadros():
             cuadros[y_aleatorio][x_aleatorio] = cuadro_temporal
 
 
+# Función para mostrar el cartel de éxito
+def mostrar_cartel_exito():
+
+    pantalla_juego.fill(color_blanco)
+
+    # Crear un fuente para el texto
+    fuente = pygame.font.Font(ruta_fuente, 72)
+    texto = fuente.render("¡Felicitaciones! Ganaste", True, color_rosa)
+    fuente = pygame.font.Font(ruta_fuente, 50)
+    texto2 = fuente.render("Reiniciando juego... No cierres la ventana", True, color_rosa)
+    
+    
+    # Centrar el texto en la pantalla
+    texto_rect = texto.get_rect(center=(anchura_pantalla // 2, altura_pantalla // 2))
+    texto_rect2 = texto2.get_rect(center=(anchura_pantalla // 2, altura_pantalla // 2 + 60))
+
+    # Dibujar el texto en la pantalla
+    pantalla_juego.blit(texto, texto_rect)
+    pantalla_juego.blit(texto2, texto_rect2)
+
+    
+    # Actualizar la pantalla
+    pygame.display.update()
+    
+    # Pausa para mostrar el cartel por 2 segundos
+    pygame.time.delay(5000)  # 2000 milisegundos = 2 segundos
+
+    reiniciar_juego()
+
 def comprobar_si_gana():
     if gana():
         pygame.mixer.Sound.play(sonido_exito)
-        reiniciar_juego()
+        mostrar_cartel_exito()
+        
 
 
 # Regresa False si al menos un cuadro NO está descubierto. True en caso de que absolutamente todos estén descubiertos
@@ -158,6 +198,7 @@ def reiniciar_juego():
 
 
 def iniciar_juego():
+
     pygame.mixer.Sound.play(sonido_clic)
     global juego_iniciado
     # Aleatorizar 3 veces
@@ -166,6 +207,10 @@ def iniciar_juego():
     ocultar_todos_los_cuadros()
     juego_iniciado = True
 
+# Función para detectar clics en el botón de reinicio
+def detectar_clic_reiniciar(pos):
+    boton_rect = pygame.Rect(anchura_pantalla // 2 - 250, altura_pantalla - 60, 500, 40)
+    return boton_rect.collidepoint(pos)
 
 """
 Iniciamos la pantalla con las medidas previamente calculadas, colocamos título y
@@ -176,6 +221,8 @@ pygame.display.set_caption('Memoria Calchines')
 pygame.mixer.Sound.play(sonido_fondo, -1)  # El -1 indica un loop infinito
 # Ciclo infinito...
 while True:
+
+
     # Escuchar eventos, pues estamos en un ciclo infinito que se repite varias veces por segundo
     for event in pygame.event.get():
         
@@ -186,6 +233,9 @@ while True:
             if event.key == pygame.K_ESCAPE:
                 sys.exit()
         # Si hicieron clic y el usuario puede jugar...
+
+
+
         elif event.type == pygame.MOUSEBUTTONDOWN and puede_jugar:
 
             """
@@ -200,10 +250,14 @@ while True:
             if boton.collidepoint(event.pos):
                 if not juego_iniciado:
                     iniciar_juego()
+
             else:
                 # Si no hay juego iniciado, ignoramos el clic
                 if not juego_iniciado:
                     continue
+                
+                if detectar_clic_reiniciar(event.pos):
+                    reiniciar_juego()  # Llamar a la función de reinicio si se hace clic en el botón
 
                 # Calcular los índices x e y en base a las coordenadas del clic
                 x = math.floor((xAbsoluto - margen_izquierdo) / medida_cuadro)
@@ -290,10 +344,6 @@ while True:
     margen_izquierdo = espacio_horizontal // 2
     margen_superior = espacio_vertical // 2
 
-    # Hago un rectangulo que rodee el tablero
-
-    color_gris = (128, 128, 128)
-    pygame.draw.rect(pantalla_juego, color_gris, (margen_izquierdo -20, margen_superior - 20, len(cuadros[0]) * medida_cuadro + 20, len(cuadros) * medida_cuadro +20), 2)
     
     # Recorrer los cuadros y dibujar en las coordenadas ajustadas
     y = margen_superior
@@ -308,14 +358,31 @@ while True:
         y += medida_cuadro
 
     # También dibujamos el botón
+    if not juego_iniciado:
+        pygame.draw.rect(pantalla_juego, color_gris, boton, border_radius=10)
+
+        # Dibujar el texto en el botón
+        pantalla_juego.blit(texto_boton_iniciar, texto_boton_iniciar_rect)
+        
+        pantalla_juego.blit(logo, (anchura_pantalla//2 - ancho_logo //2, 40))  # Dibujar la imagen en la posición (100, 100)
+
     if juego_iniciado:
-        # Si está iniciado, entonces botón blanco con fuente gris para que parezca deshabilitado
-        pygame.draw.rect(pantalla_juego, color_blanco, boton)
-        pantalla_juego.blit(fuente.render(
-            "INICIAR JUEGO", True, color_gris), (xFuente, yFuente))
-    else:
-        pygame.draw.rect(pantalla_juego, color_azul, boton)
-        pantalla_juego.blit(texto_boton_iniciar, (xFuente, yFuente))
+        fuente_titulo = pygame.font.Font(ruta_fuente, 50)
+        titulo_iniciar = fuente_titulo.render("Juego de la memoria", True, color_rosa)
+        titulo_iniciar_rect = titulo_iniciar.get_rect()
+        titulo_iniciar_rect.center = (anchura_pantalla//2, 40)
+        pantalla_juego.blit(titulo_iniciar, titulo_iniciar_rect)
+        texto_iniciar = fuente.render("Encontrá las parejas", True, color_rosa)
+        texto_iniciar_rect = texto_iniciar.get_rect()
+        texto_iniciar_rect.center = (anchura_pantalla //2, 90)
+        pantalla_juego.blit(texto_iniciar, texto_iniciar_rect)
+
+        # Dibujar el botón de reiniciar
+        fuente = pygame.font.Font(ruta_fuente, 40)
+        pygame.draw.rect(pantalla_juego, color_gris, (anchura_pantalla // 2 - 250, altura_pantalla - 60, 500, 40), border_radius=10)  # Rectángulo del botón
+        texto_boton = fuente.render("Reiniciar Juego", True, color_blanco)
+        texto_boton_rect = texto_boton.get_rect(center=(anchura_pantalla // 2, altura_pantalla - 40))  # Ajustar posición del texto
+        pantalla_juego.blit(texto_boton, texto_boton_rect)
 
     # Actualizamos la pantalla
     pygame.display.update()
